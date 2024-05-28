@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
-from .models import Gender, User
+from django.shortcuts import render, redirect       
+from .models import Gender
+from .models import User
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
+#from django.shortcuts import get_object_or_404, redirect
 
 # Create your views here.
 
@@ -16,7 +18,7 @@ def index_gender(request):
  
 def create_gender(request):
     return render(request, 'gender/create.html')
-
+    
 def store_gender(request):
     gender = request.POST.get('gender')
     Gender.objects.create(gender=gender) # INSERT INTO genders(gender) VALUES(gender)
@@ -105,7 +107,7 @@ def store_user(request):
                 birth_date=birth_date,  
                 gender_id=gender_id,
                 username=username,
-                password=encrypted_password
+                password=encrypted_password,
             )
 
             messages.success(request, 'User successfully saved.')
@@ -114,4 +116,55 @@ def store_user(request):
         else:
             messages.error(request, 'Passwords do not match.')
             return redirect('/users/create')
+
+
+def delete_user(request, user_id):
+    user = User.objects.get(pk=user_id)  # SELECT * FROM user WHERE user_id = user_id
+
+    context = {
+        'user': user,
+    }
+
+    return render(request, 'user/delete.html', context)
+
+def destroy_user(request, user_id):
+    User.objects.filter(pk=user_id).delete()
+    messages.success(request, 'User successfully deleted.')
+
+    return redirect('/users')
+
+def show_user(request, user_id):
+    user = User.objects.get(pk=user_id) #SELECT * FROM gender WHERE gender_id = gender_id
+
+    context = {
+        'user': user,
+    }
+
+    return render(request, 'user/show.html', context)
+
+def edit_user(request, username_id):
+    user = User.objects.get(pk=username_id)
+    genders = Gender.objects.all()
+    
+    context = {
+        'user': user,
+        'genders': genders
+    }
+    
+    return render(request, 'user/edit.html', context)
+
+def update_user(request, username_id):
+    if request.method == 'POST':
+        user = User.objects.get(pk=username_id)
         
+        user.first_name = request.POST.get('first_name')
+        user.middle_name = request.POST.get('middle_name')
+        user.last_name = request.POST.get('last_name')
+        user.age = request.POST.get('age')
+        user.birth_date = request.POST.get('birth_date')    
+        user.username = request.POST.get('username')
+        
+        user.save()
+        messages.success(request, 'User successfully updated.')
+        
+    return redirect('/users')
